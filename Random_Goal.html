@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="sample.css">
+<title>らんだむゴールくん</title>
+<link rel="stylesheet" href="sample.css">
+</head>
+
+<body>
+<div id="container2">
+<div class="layer-wrap">
+<canvas id="background-layer" width="400" height="470"></canvas>
+<canvas id="middle-layer" width="400" height="470"></canvas>
+<canvas id="chara-layer" width="400" height="470"></canvas>
+<canvas id="middle5-layer" width="400" height="470"></canvas>
+<canvas id="middle2-layer" width="400" height="470"></canvas>
+<canvas id="middle3-layer" width="400" height="470"></canvas>
+<canvas id="middle4-layer" width="400" height="470"></canvas>
+
+</div>
+</div>
+
+<div id="container"><button id="Left">⇦</button><button id="Right">⇨</button><button id="Up">⇡</button><button id="Down">⇣</button></div>
+
+
+
+<script>
+// 変数の中身を表示
+const test = document.createElement("p");
+test.id = "test";
+document.body.appendChild(test);
+
+
+// canvas要素を作成
+// ・キャラクター
+const canvas = document.getElementById("chara-layer");
+const ctx = canvas.getContext("2d");
+
+// ・四角形
+const canvas2 = document.getElementById("middle-layer");
+const ctx2 = canvas2.getContext("2d");
+
+// ・旗＆GOAL
+const canvas3 = document.getElementById("middle2-layer");
+const ctx3 = canvas3.getContext("2d");
+
+// ・GOAL背景四角
+const canvas6 = document.getElementById("middle5-layer");
+const ctx6 = canvas6.getContext("2d");
+
+// ・CLEARED!
+const canvas4 = document.getElementById("middle3-layer");
+const ctx4 = canvas4.getContext("2d");
+
+// ・One More playボタン
+const canvas5 = document.getElementById("middle4-layer");
+const ctx5 = canvas4.getContext("2d");
+
+// キャラクター描画開始位置
+let ellipseX = 125;
+
+let LeftEyeX = 110;
+let LeftEyeOpX = 110;
+let LeftPinkX = 102;
+
+let RightEyeX = 140;
+let RightEyeOpX = 140;
+let RightPinkX = 148;
+
+let ellipseY = 40;
+
+let LeftEyeY = 40;
+let LeftEyeOpY = 35;
+let LeftPinkY = 65;
+
+let RightEyeY = 40;
+let RightEyeOpY = 35;
+let RightPinkY = 65;
+
+
+// 移動の加算変数
+let dx = 2;
+let dy = -2;
+
+// 上端＆下端への衝突検出用(楕円の横幅)
+ellipseRadiusX = 40;
+
+// 左端＆右端への衝突検出用(楕円の縦幅)
+ellipseRadiusY = 48;
+
+
+// ブロック描画のための変数
+const brickRowCount = 1;
+const brickColumnCount = 1;
+const brickWidth = 100;
+const brickHeight = 100;
+const brickPadding = 10;
+const brickOffsetTop = 80;
+const brickOffsetLeft = 30;
+
+// ▼ブロックの描画開始位置ランダム生成用に関するコード
+// 右端の上限を計算する用
+randomBrickY = canvas.width - brickWidth - brickOffsetLeft;
+// 下端の上限を計算する用
+randomBrickX = canvas.height - brickHeight - brickOffsetTop;
+
+// ブロックの描画開始位置
+const brickX = Math.floor(Math.random() * (randomBrickY + 1)) + brickOffsetLeft;
+const brickY = Math.floor(Math.random() * (randomBrickX + 1)) + brickOffsetTop;
+
+// ▲ブロックの描画開始位置ランダム生成用に関するコード
+
+// ブロックの情報を保存するオブジェクト
+const bricks = [];
+for (let c = 0; c < brickColumnCount; c++) {
+  bricks[c] = [];
+  for (let r = 0; r < brickRowCount; r++) {
+    bricks[c][r] = { x: 0, y: 0, status: 1};
+  }
+}
+
+// ブロックを描画する関数
+function drawBricks() {
+  for (let c = 0; c < brickColumnCount; c++) {
+    for (let r = 0; r < brickRowCount; r++) {
+      if (bricks[c][r].status === 1) {
+      bricks[c][r].x = brickX;
+      bricks[c][r].y = brickY;
+      ctx2.beginPath();
+      ctx2.rect(brickX, brickY, brickWidth, brickHeight);
+      ctx2.fillStyle = "#eee";
+      ctx2.fill();
+      ctx2.closePath();
+     } else if (bricks[c][r].status === 0) {
+       // ブロックを消去
+       ctx2.clearRect(brickX, brickY, brickWidth, brickHeight);
+      }
+    }
+  }
+}
+
+// 衝突検出の変数
+// ・クリアとワンモアプレイのY座標
+const textY = (ellipseRadiusX * 2)/2;
+// ・背景四角の高さ
+const rectBackHeight = (ellipseRadiusX * 2);
+// ・楕円の左端から右端までの大きさ
+const ellipseRange = (ellipseRadiusY * 2);
+
+
+// ブロックへの衝突検出
+function collisionDetection() {
+  for (let c = 0; c < brickColumnCount; c++) {
+    for (let r = 0; r < brickRowCount; r++) {
+      const b = bricks[c][r];
+      if (ellipseX > b.x && ellipseX < b.x + brickWidth && ellipseY > b.y && ellipseY < b.y + brickHeight) {
+        // キャラがジャンプした時のY座標の上限計算用の変数
+        upMaxEllipseY = ellipseY - brickHeight;
+
+        upMaxLeftEyeY = LeftEyeY - brickHeight - 3;
+　　　　upMaxLeftEyeOpY = LeftEyeOpY - brickHeight - 3;
+        upMaxLeftPinkY = LeftPinkY - brickHeight - 3;
+
+        upMaxRightEyeY = RightEyeY - brickHeight - 3;
+        upMaxRightEyeOpY = RightEyeOpY - brickHeight - 3;
+        upMaxRightPinkY = RightPinkY - brickHeight - 3;
+        
+        // Y座標の上限計算開始(キャラが画面外に飛び出さないように)
+        ellipseY = Math.max(upMaxEllipseY, 40);
+
+        LeftEyeY = Math.max(upMaxLeftEyeY, 40);
+        LeftEyeOpY = Math.max(upMaxLeftEyeOpY,35);
+        LeftPinkY = Math.max(upMaxLeftPinkY, 65);
+
+        RightEyeY = Math.max(upMaxRightEyeY, 40);
+        RightEyeOpY = Math.max(upMaxRightEyeOpY, 35);
+        RightPinkY = Math.max(upMaxRightPinkY, 65);
+// 三角形
+ctx3.beginPath();
+ctx3.moveTo(Math.max(brickX - 13, 93), brickY);
+ctx3.lineTo(Math.max(brickX - 93, 0), brickY);
+ctx3.lineTo(Math.max(brickX - 13, 93), brickY + 50);
+ctx3.strokeStyle = "#0095DD";
+ctx3.closePath();
+
+// 縦棒
+ctx3.moveTo(Math.max(brickX - 13, 93), brickY);
+ctx3.lineTo(Math.max(brickX - 13, 93), brickY + 110);
+ctx3.lineWidth = 10;
+ctx3.strokeStyle = "#0095DD";
+ctx3.stroke();
+
+// 円
+ctx3.beginPath();
+ctx3.arc(Math.max(brickX - 13, 92), brickY - 13, 5, 0, Math.PI * 2, false);
+ctx3.strokeStyle = "#0095DD";
+ctx3.stroke();
+
+// GOAL背景四角
+ctx6.beginPath();
+ctx6.rect(Math.max(brickX, 0), brickY + 20,  ellipseRange + 30, rectBackHeight/2);
+ctx6.fillStyle = "black";
+ctx6.fill();
+
+
+// 文字(GOAL)
+ctx3.beginPath();
+ctx3.font = "40px cursive";
+ctx3.fillStyle = "white";
+ctx3.fillText("GOAL!", Math.max(brickX, 0), brickY + 55)	
+
+// CLEARED!
+// ・背景四角形
+ctx4.beginPath();
+ctx4.rect(brickX - 50, Math.min(ellipseY + ellipseRadiusX + 150, canvas.height - rectBackHeight * 1.1), ellipseRange * 1.5 + 30 + 90, rectBackHeight);
+ctx4.fillStyle = "black";
+ctx4.fill();
+// ・文字
+ctx4.beginPath();
+ctx4.font = "30px cursive";
+ctx4.fillStyle = "white";
+ctx4.fillText("CLEARED!", brickX - 35 + 0.5, Math.min(ellipseY + ellipseRadiusX + 145 + textY, canvas.height - (rectBackHeight * 1.1)/2), canvas.height - rectBackHeight/2 - 10);
+
+// One More Play
+ctx5.beginPath();
+ctx5.font = "30px cursive";
+ctx5.fillStyle = "white";
+ctx5.fillText("▶One More Play", brickX - 35 + 0.5, Math.min(ellipseY + ellipseRadiusX + 145 + textY + rectBackHeight/2, canvas.height - 10));
+    
+        /* 
+        ctx3.moveTo(brickX, brickY);
+        ctx3.lineTo(brickX + 50, brickY);
+         
+　　　　alert("ゴール!");
+        document.location.reload();
+　　　　 */
+        } 
+    }
+  }
+}
+
+// One More Play関数
+function OneMore() {
+  document.location.reload();
+}
+
+
+function draw(){ //▼draw()
+
+// 再描画ごとにキャンバスを消去
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// 楕円 ※Math.PI/2で90度傾けているので48は本当は縦幅だけど横になってる
+ctx.beginPath();
+ctx.ellipse(ellipseX, ellipseY, ellipseRadiusX, ellipseRadiusY, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#0095DD";
+ctx.fill();
+
+// 左目
+ctx.beginPath();
+ctx.ellipse(LeftEyeX, LeftEyeY, 21, 7, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#2f393d";
+ctx.fill();
+
+// 左目の光沢
+ctx.beginPath();
+ctx.ellipse(LeftEyeOpX, LeftEyeOpY, 12, 4, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+// 左の頬紅
+ctx.beginPath();
+ctx.ellipse(LeftPinkX, LeftPinkY, 7, 10, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#ffb6c1";
+ctx.fill();
+
+// 右目
+ctx.beginPath();
+ctx.ellipse(RightEyeX, RightEyeY, 21, 7, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#2f393d";
+ctx.fill();
+
+// 右目の光沢
+ctx.beginPath();
+ctx.ellipse(RightEyeOpX, RightEyeOpY, 12, 4, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+// 右の頬紅
+ctx.beginPath();
+ctx.ellipse(RightPinkX, RightPinkY, 7, 10, Math.PI/2, 0, 2 * Math.PI);
+ctx.fillStyle = "#ffb6c1";
+ctx.fill();
+
+
+// 衝突検出
+collisionDetection();
+
+
+// 移動処理
+if (rightPressed) {
+   // 右端への衝突検出
+　if (ellipseX + dx < canvas.width - ellipseRadiusY) {
+  ellipseX += dx;
+
+  LeftEyeX += dx;
+  LeftEyeOpX += dx;
+  LeftPinkX += dx;
+
+  RightEyeX += dx;
+  RightEyeOpX += dx;
+  RightPinkX += dx;
+  }
+
+} else if (leftPressed) {
+  // 左端への衝突検出
+  if (ellipseX - dx> ellipseRadiusY) {
+  ellipseX -= dx;
+
+  LeftEyeX -= dx;
+  LeftEyeOpX -= dx;
+  LeftPinkX -= dx;
+
+  RightEyeX -= dx;
+  RightEyeOpX -= dx;
+  RightPinkX -= dx;
+  }
+} else if (upPressed) {
+  // 上端への衝突検出
+  if (ellipseY > ellipseRadiusX) {
+  ellipseY += dy;
+
+  LeftEyeY += dy;
+  LeftEyeOpY += dy;
+  LeftPinkY += dy;
+
+  RightEyeY += dy;
+  RightEyeOpY += dy;
+  RightPinkY += dy;
+  }
+
+} else if (downPressed) {
+　// 下端への衝突検出
+　if (canvas.height - ellipseRadiusX > ellipseY) {
+  ellipseY -= dy;
+
+  LeftEyeY -= dy;
+  LeftEyeOpY -= dy;
+  LeftPinkY -= dy;
+
+  RightEyeY -= dy;
+  RightEyeOpY -= dy;
+  RightPinkY -= dy;
+  }
+}
+
+requestAnimationFrame(draw);
+
+} //▲draw()
+
+
+// ブロックを描画
+drawBricks();
+
+
+// ▼ボタンが押されているかどうか 
+// 初期値
+let rightPressed = false;
+let leftPressed = false;
+let upPressed = false;
+let downPressed = false;
+
+function keyDownHandler(e) {
+  if (e.key === "Right" || e.key === "ArrowRight") {
+    rightPressed = true;
+  } else if (e.key === "Left" || e.key === "ArrowLeft") {
+    leftPressed = true;
+  }
+  else if(e.key === "Up" || e.key === "ArrowUp") {
+           upPressed = true;
+   } else if (e.key === "Down" || e.key === "ArrowDown") {
+      downPressed = true;
+    }
+
+}
+
+function keyUpHandler(e) {
+  if (e.key === "Right" || e.key === "ArrowRight") {
+    rightPressed = false;
+  } else if (e.key === "Left" || e.key === "ArrowLeft") {
+    leftPressed = false;
+  }
+    else if(e.key === "Up" || e.key === "ArrowUp") {
+     upPressed = false;
+   } else if (e.key === "Down" || e.key === "ArrowDown") {
+      downPressed = false;
+    }
+
+}
+
+// 右矢印を押したとき
+function buttonDownRight() {
+  rightPressed = true;
+}
+
+function buttonUpRight() {
+  rightPressed = false;
+
+}
+
+// 左矢印を押したとき
+function buttonDownLeft() {
+  leftPressed = true;
+}
+
+function buttonUpLeft() {
+  leftPressed = false;
+
+}
+
+// 上矢印を押したとき
+function UpPress() {
+ upPressed = true;
+}
+
+function Upleave() {
+ upPressed = false;
+}
+
+// 下矢印を押したとき
+function DownPress() {
+ downPressed = true;
+}
+
+function Downleave() {
+ downPressed = false;
+}
+
+
+
+const buttonRight = document.getElementById("Right");
+const buttonLeft = document.getElementById("Left");
+const buttonUp = document.getElementById("Up");
+const buttonDown = document.getElementById("Down");
+
+
+
+
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+// 操作ボタンのイベント処理
+buttonRight.addEventListener("pointerdown", buttonDownRight, false);
+buttonRight.addEventListener("pointerup", buttonUpRight, false);
+
+buttonLeft.addEventListener("pointerdown", buttonDownLeft, false);
+buttonLeft.addEventListener("pointerup", buttonUpLeft, false);
+
+buttonUp.addEventListener("pointerdown", UpPress, false);
+buttonUp.addEventListener("pointerup", Upleave, false);
+
+buttonDown.addEventListener("pointerdown", DownPress, false);
+buttonDown.addEventListener("pointerup",  Downleave, false);
+
+// ▲ボタンが押されているかどうか 
+
+// One More Playボタンの処理
+canvas5.addEventListener("pointerdown", OneMore, false);
+
+// 楕円を描画する関数呼び出し
+draw();
+
+</script>
+
+</body>
+
+</html>

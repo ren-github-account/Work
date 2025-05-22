@@ -6,7 +6,7 @@
 
 JavaScript, HTML・CSS
 
-・追記
+・補足事項
 
 HTMLファイルの中に直接JavaScriptを埋め込んであります。
 

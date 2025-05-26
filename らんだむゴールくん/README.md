@@ -6,6 +6,7 @@
 
 JavaScript, HTML・CSS
 
-【補足事項】
+### 補足
+
 JavaScriptはHTMLファイルの中に埋め込んであります。
 

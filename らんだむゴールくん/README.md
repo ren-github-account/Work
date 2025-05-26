@@ -6,7 +6,6 @@
 
 JavaScript, HTML・CSS
 
-・補足事項
-
-HTMLファイルの中に直接JavaScriptを埋め込んであります。
+【補足事項】
+JavaScriptはHTMLファイルの中に埋め込んであります。
 
